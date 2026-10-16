@@ -1,0 +1,92 @@
+name: epl-dual-dashboard
+x-app: &app
+  image: epl-dashboard-api:local
+  build:
+    context: .
+    target: api
+  environment: &database-env
+    PGHOST: db
+    PGPORT: 5432
+    PGDATABASE: ${POSTGRES_DB:-epl_dashboard}
+    PGUSER: ${POSTGRES_USER:-epl}
+    PGPASSWORD: ${POSTGRES_PASSWORD:-epl_local_dev}
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-epl_dashboard}
+      POSTGRES_USER: ${POSTGRES_USER:-epl}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-epl_local_dev}
+    volumes:
+      - epl-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  importer:
+    <<: *app
+    command: ["node", "server/import-cli.js"]
+    environment:
+      <<: *database-env
+      DATASET_PATH: "/app/data/epl-goalScorer(20-21)(in).csv"
+      ALLOW_DEMO: "false"
+    volumes:
+      - ./data:/app/data:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    <<: *app
+    depends_on:
+      db:
+        condition: service_healthy
+      importer:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  penyelenggara:
+    build:
+      context: .
+      target: web
+      args:
+        DASHBOARD_ENTRY: penyelenggara.html
+    ports:
+      - "127.0.0.1:${ORGANIZER_PORT:-8081}:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  penonton:
+    build:
+      context: .
+      target: web
+      args:
+        DASHBOARD_ENTRY: penonton.html
+    ports:
+      - "127.0.0.1:${SPECTATOR_PORT:-8082}:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  epl-postgres:

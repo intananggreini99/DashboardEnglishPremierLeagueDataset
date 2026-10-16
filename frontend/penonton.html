@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0d3e29" />
+    <meta
+      name="description"
+      content="Jelajahi top skor, kreativitas, efisiensi, dan perbandingan bintang EPL 2020/21 untuk penonton pertandingan."
+    />
+    <title>EPL · Dashboard Penonton</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d3e29'/%3E%3Cpath d='M8 9h16v4h-6v12h-4V13H8z' fill='white'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <script defer src="/vendor/d3.min.js"></script>
+    <script type="module" src="/js/app.js"></script>
+  </head>
+  <body data-audience="spectator" class="bg-paper text-ink antialiased">
+    <a class="skip-link" href="#main">Lewati navigasi</a>
+    <div id="app"></div>
+    <noscript
+      ><p class="p-8">
+        Aktifkan JavaScript untuk menampilkan dashboard D3.js.
+      </p></noscript
+    >
+    <div id="tooltip" class="tooltip" role="tooltip" hidden></div>
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  </body>
+</html>
